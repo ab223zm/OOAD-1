@@ -1,36 +1,67 @@
 package BlackJack.controller;
 
 import BlackJack.view.IView;
+import BlackJack.view.IView.PlayerState;
 import BlackJack.model.Game;
+import BlackJack.model.Observer;
 
-public class PlayGame {
+public class PlayGame implements Observer {
+	Game game;
+	IView view;
 
-  public boolean Play(Game a_game, IView a_view) {
-    a_view.DisplayWelcomeMessage();
-    
-    a_view.DisplayDealerHand(a_game.GetDealerHand(), a_game.GetDealerScore());
-    a_view.DisplayPlayerHand(a_game.GetPlayerHand(), a_game.GetPlayerScore());
+	public PlayGame(Game a_game, IView a_view) {
+		this.game = a_game;
+		this.view = a_view;
+		this.game.AddSubscriber(this);
+	}
 
-    if (a_game.IsGameOver())
-    {
-        a_view.DisplayGameOver(a_game.IsDealerWinner());
-    }
+	public boolean Play() {
+		view.DisplayWelcomeMessage();
 
-    int input = a_view.GetInput();
-    
-    if (input == 'p')
-    {
-        a_game.NewGame();
-    }
-    else if (input == 'h')
-    {
-        a_game.Hit();
-    }
-    else if (input == 's')
-    {
-        a_game.Stand();
-    }
+		view.DisplayDealerHand(game.GetDealerHand(), game.GetDealerScore());
+		view.DisplayPlayerHand(game.GetPlayerHand(), game.GetPlayerScore());
 
-    return input != 'q';
-  }
+		if (game.IsGameOver()) {
+			view.DisplayGameOver(game.IsDealerWinner());
+		}
+
+		PlayerState input = view.GetInput();
+
+		switch (input) {
+		case Play:
+			game.NewGame();
+			break;
+
+		case Stand:
+			game.Stand();
+			break;
+
+		case Hit:
+			game.Hit();
+			break;
+
+		case Quit:
+			return false;
+
+		}
+		return true;
+	}
+
+	@Override
+	public void DealNewCard() {
+
+		try {
+			Thread.sleep(2500);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		if (game.IsGameOver()) {
+			view.DisplayGameOver(game.IsDealerWinner());
+		}
+		view.InsertRow();
+		view.DisplayDealerHand(game.GetDealerHand(), game.GetDealerScore());
+		view.DisplayPlayerHand(game.GetPlayerHand(), game.GetPlayerScore());
+
+	}
 }
+
